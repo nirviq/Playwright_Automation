@@ -1,0 +1,4 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"","30017","record demo test","firefox","2026-08-06","broken","2026-08-06","","record1_demo.spec.js","",""
+"","30010","record demo test","webkit","2026-08-06","broken","2026-08-06","","record1_demo.spec.js","",""
+"","30011","record demo test","chromium","2026-08-06","broken","2026-08-06","","record1_demo.spec.js","",""
