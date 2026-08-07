@@ -1,8 +1,14 @@
 {
-	"servers": {
-		"playwright": {
-			"command": "npx",
-      "args": ["-y", "@microsoft/mcp-server-playwright"]
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest"],
+      "env": {
+        "PLAYWRIGHT_BROWSERS_PATH": "/absolute/path/to/ms-playwright"
+      }
     }
   }
 }
+
+
+
