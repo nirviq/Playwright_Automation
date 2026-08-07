@@ -25,9 +25,24 @@ export default defineConfig({
   // workers
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   // reporter: 'html',
-  // reporter: [['html'],['list'],['line'],['json'],['junit'],['dot'], ['allure-playwright']],
+
+  reporter: [
+    ['html', { open: 'never', outputFolder: './playwright-report'}],
+    ['list'],
+    ['line', { outputFile: './playwright-report/line.txt' }],
+    ['json', { outputFile: './playwright-report/json.json' }],
+    ['junit', { outputFile: './playwright-report/junit.xml' }],
+    ['dot', { outputFile: './playwright-report/dot.txt' }],
+    ['allure-playwright', { outputFolder: './playwright-report/allure-results' }],
+    ['monocart-reporter', 
+      { 
+        outputFile: './monocart-report/index.html',
+        title: 'Playwright Test Report'
+      }
+    ]],
   // playwright.config.js
-  reporter: [['allure-playwright', { outputFolder: 'allure-results' }]],
+
+  // reporter: [['allure-playwright', { outputFolder: 'allure-results' }]],
   // npx allure generate allure-results --clean && npx allure open
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
