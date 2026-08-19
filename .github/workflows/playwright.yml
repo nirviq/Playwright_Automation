@@ -112,11 +112,22 @@ jobs:
             --token "$ALLURE_TOKEN" \
             --launch-name "Playwright ${{ github.workflow }} #${{ github.run_number }}"
 
-      - name: Upload GitHub Pages artifact
+      - name: Generate Allure report
+        if: ${{ always() && !cancelled() }}
+        shell: bash
+        run: |
+          if find allure-results -maxdepth 1 -name '*-result.json' -print -quit 2>/dev/null | grep -q .; then
+            npx allure generate allure-results --clean -o allure-report
+          else
+            echo "No Allure results found; creating an empty report directory."
+            mkdir -p allure-report
+          fi
+
+      - name: Upload Allure Pages artifact
         if: ${{ github.event_name == 'push' && !cancelled() }}
         uses: actions/upload-pages-artifact@v3
         with:
-          path: playwright-report/
+          path: allure-report/
 
   deploy-report:
     needs: test
