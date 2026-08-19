@@ -52,15 +52,16 @@ jobs:
         run: npx playwright test
 
       - name: Upload downloadable Playwright report
-        if: ${{ !cancelled() }}
+        if: ${{ always() && !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
           path: playwright-report/
+          if-no-files-found: ignore
           retention-days: 30
 
       - name: Upload raw Allure results
-        if: ${{ !cancelled() }}
+        if: ${{ always() && !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
           name: allure-results-${{ github.run_number }}
@@ -69,14 +70,14 @@ jobs:
           retention-days: 30
 
       - name: Install Allure CLI
-        if: ${{ !cancelled() && env.ALLURE_ENDPOINT != '' && env.ALLURE_PROJECT_ID != '' && env.ALLURE_TOKEN != '' }}
+        if: ${{ always() && !cancelled() && env.ALLURE_ENDPOINT != '' && env.ALLURE_PROJECT_ID != '' && env.ALLURE_TOKEN != '' }}
         run: |
           curl -fsSL https://github.com/allure-framework/allurectl/releases/latest/download/allurectl_linux_amd64 \
             -o "$RUNNER_TEMP/allurectl"
           chmod +x "$RUNNER_TEMP/allurectl"
 
       - name: Upload results to Allure TestOps
-        if: ${{ !cancelled() && env.ALLURE_ENDPOINT != '' && env.ALLURE_PROJECT_ID != '' && env.ALLURE_TOKEN != '' }}
+        if: ${{ always() && !cancelled() && env.ALLURE_ENDPOINT != '' && env.ALLURE_PROJECT_ID != '' && env.ALLURE_TOKEN != '' }}
         run: |
           "$RUNNER_TEMP/allurectl" upload allure-results \
             --endpoint "$ALLURE_ENDPOINT" \
