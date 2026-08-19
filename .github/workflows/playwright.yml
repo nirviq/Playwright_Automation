@@ -55,14 +55,14 @@ jobs:
           retention-days: 30
 
       - name: Upload GitHub Pages artifact
-        if: ${{ !cancelled() }}
+        if: ${{ github.event_name == 'push' && !cancelled() }}
         uses: actions/upload-pages-artifact@v3
         with:
           path: playwright-report/
 
   deploy-report:
     needs: test
-    if: ${{ !cancelled() }}
+    if: ${{ github.event_name == 'push' && !cancelled() }}
     runs-on: ubuntu-latest
     environment:
       name: github-pages
