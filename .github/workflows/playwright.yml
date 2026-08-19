@@ -28,6 +28,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
@@ -48,8 +50,33 @@ jobs:
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
 
-      - name: Run Playwright tests
-        run: npx playwright test
+      # Run only test files changed by this push or pull request.
+      - name: Find changed Playwright test files
+        id: changed-tests
+        shell: bash
+        run: |
+          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+            git diff --name-only "origin/$GITHUB_BASE_REF...$GITHUB_SHA" > changed-files.txt
+          elif [[ "$GITHUB_EVENT_BEFORE" == "0000000000000000000000000000000000000000" ]]; then
+            git diff --name-only HEAD^ HEAD > changed-files.txt
+          else
+            git diff --name-only "$GITHUB_EVENT_BEFORE" "$GITHUB_SHA" > changed-files.txt
+          fi
+
+          grep -E '^tests/.*\.(spec|test)\.(js|ts|mjs|mts|jsx|tsx)$' changed-files.txt > changed-tests.txt || true
+          echo "Changed test files:"
+          cat changed-tests.txt || true
+
+      - name: Run changed Playwright tests
+        shell: bash
+        run: |
+          if [[ ! -s changed-tests.txt ]]; then
+            echo "No Playwright test files changed; skipping test execution."
+            exit 0
+          fi
+
+          mapfile -t test_files < changed-tests.txt
+          npx playwright test "${test_files[@]}" --workers=4 --reporter=html,list
 
       - name: Upload downloadable Playwright report
         if: ${{ always() && !cancelled() }}

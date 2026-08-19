@@ -27,15 +27,16 @@ export default defineConfig({
   // reporter: 'html',
 
   reporter: [
+    ['allure-playwright', { outputFolder: './allure-results' }],
     ['html', { open: 'never', outputFolder: './playwright-report'}],
     ['list'],
-    ['line', { outputFile: './playwright-report/line.txt' }],
-    ['json', { outputFile: './playwright-report/json.json' }],
-    ['junit', { outputFile: './playwright-report/junit.xml' }],
+    ['line', { open: 'never', outputFile: './playwright-report/line.txt' }],
+    ['json', { open: 'never', outputFile: './playwright-report/json.json' }],
+    ['junit', { open: 'never', outputFile: './playwright-report/junit.xml' }],
     ['dot', { outputFile: './playwright-report/dot.txt' }],
-    ['allure-playwright', { outputFolder: './playwright-report/allure-results' }],
     ['monocart-reporter', 
       { 
+        open: 'never', 
         outputFile: './monocart-report/index.html',
         title: 'Playwright Test Report'
       }
