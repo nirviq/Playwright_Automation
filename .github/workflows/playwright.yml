@@ -96,7 +96,7 @@ jobs:
           if-no-files-found: ignore
           retention-days: 30
 
-      - name: Install Allure CLI
+      - name: Install Allure TestOps CLI
         if: ${{ always() && !cancelled() && env.ALLURE_ENDPOINT != '' && env.ALLURE_PROJECT_ID != '' && env.ALLURE_TOKEN != '' }}
         run: |
           curl -fsSL https://github.com/allure-framework/allurectl/releases/latest/download/allurectl_linux_amd64 \
@@ -140,3 +140,39 @@ jobs:
       - name: Deploy Playwright report to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+  notify-manager:
+    needs:
+      - test
+      - deploy-report
+    if: ${{ always() && !cancelled() && needs.test.result == 'success' && (github.event_name == 'pull_request' || needs.deploy-report.result == 'success') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Email manager after successful pipeline
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          from: ${{ secrets.SMTP_USERNAME }}
+          to: nirviq@gmail.com
+          subject: Playwright pipeline passed
+          body: The Playwright GitHub Actions pipeline completed successfully.
+
+  automated-api-tests:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Postman CLI
+        run: |
+          curl -o- "https://dl-cli.pstmn.io/install/osx_64.sh" | sh
+
+      - name: Login to Postman CLI
+        run: postman login --with-api-key "${{ secrets.POSTMAN_API_KEY }}"
+
+      - name: Run API tests
+        run: |
+          postman collection run "17849156-9e51fc07-2307-4ac4-b98b-f3c5e6238dcd"
