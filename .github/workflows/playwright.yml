@@ -145,7 +145,8 @@ jobs:
     needs:
       - test
       - deploy-report
-    if: ${{ always() && !cancelled() && needs.test.result == 'success' && (github.event_name == 'pull_request' || needs.deploy-report.result == 'success') }}
+      - automated-api-tests
+    if: ${{ always() && !cancelled() && needs.test.result == 'success' && needs.automated-api-tests.result == 'success' && (github.event_name == 'pull_request' || needs.deploy-report.result == 'success') }}
     runs-on: ubuntu-latest
     steps:
       - name: Email manager after successful pipeline
