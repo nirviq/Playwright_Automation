@@ -144,7 +144,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: allure-report-${{ github.run_id }}
-          path: incoming-allure-report
+          path: ${{ runner.temp }}/incoming-allure-report
 
       - name: Checkout report history
         uses: actions/checkout@v4
@@ -166,7 +166,7 @@ jobs:
           fi
 
           mkdir -p "reports/$REPORT_ID"
-          cp -R incoming-allure-report/. "reports/$REPORT_ID/"
+          cp -R "${RUNNER_TEMP}/incoming-allure-report/." "reports/$REPORT_ID/"
 
           {
             echo '<!doctype html><html><head><meta charset="utf-8">'
