@@ -9,7 +9,7 @@ on:
       - main
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -20,7 +20,7 @@ env:
 
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   test:
@@ -123,11 +123,14 @@ jobs:
             mkdir -p allure-report
           fi
 
-      - name: Upload Allure Pages artifact
+      - name: Upload generated Allure report
         if: ${{ github.event_name == 'push' && !cancelled() }}
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
+          name: allure-report-${{ github.run_id }}
           path: allure-report/
+          if-no-files-found: error
+          retention-days: 30
 
   deploy-report:
     needs: test
@@ -137,6 +140,62 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - name: Download generated Allure report
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-report-${{ github.run_id }}
+          path: incoming-allure-report
+
+      - name: Checkout report history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Add report with unique ID
+        shell: bash
+        run: |
+          REPORT_ID="$(date -u +'%Y-%m-%d_%H-%M-%S')"
+          echo "REPORT_ID=$REPORT_ID" >> "$GITHUB_ENV"
+
+          git fetch origin gh-pages:gh-pages || true
+          if git show-ref --verify --quiet refs/heads/gh-pages; then
+            git checkout gh-pages
+          else
+            git checkout --orphan gh-pages
+            git rm -rf . 2>/dev/null || true
+          fi
+
+          mkdir -p "reports/$REPORT_ID"
+          cp -R incoming-allure-report/. "reports/$REPORT_ID/"
+
+          {
+            echo '<!doctype html><html><head><meta charset="utf-8">'
+            echo '<title>Allure reports</title></head><body>'
+            echo '<h1>Allure reports</h1><ul>'
+            find reports -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort -r | while read -r report; do
+              printf '<li><a href="reports/%s/index.html">%s</a></li>\n' "$report" "$report"
+            done
+            echo '</ul></body></html>'
+          } > index.html
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html reports/
+          git commit -m "Publish Allure report $REPORT_ID" || echo "No report changes to commit."
+          git push origin gh-pages
+
+      - name: Prepare GitHub Pages artifact
+        shell: bash
+        run: |
+          mkdir pages-site
+          cp index.html pages-site/
+          cp -R reports pages-site/
+
+      - name: Upload Allure Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: pages-site/
+
       - name: Deploy Playwright report to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
